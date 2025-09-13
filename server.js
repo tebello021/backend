@@ -16,13 +16,11 @@ const generateId = () => Date.now().toString(36) + Math.random().toString(36).su
 
 // Database path
 const isVercel = process.env.VERCEL === '1';
-const dbDir = isVercel ? 'data' : path.join(__dirname, 'data');
+const dbDir = isVercel ? '/tmp' : path.join(__dirname, 'data');
 const dbPath = path.join(dbDir, 'database.json');
 
 // Ensure folder exists
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-}
+if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
 
 // Initialize database if missing
 if (!fs.existsSync(dbPath)) {
@@ -35,8 +33,7 @@ if (!fs.existsSync(dbPath)) {
 // Helpers
 const readDatabase = () => {
   try {
-    const data = fs.readFileSync(dbPath, 'utf8');
-    return JSON.parse(data);
+    return JSON.parse(fs.readFileSync(dbPath, 'utf8'));
   } catch {
     return { products: [], sales: [], customers: [], stockTransactions: [] };
   }
@@ -52,7 +49,12 @@ const writeDatabase = (data) => {
   }
 };
 
-// Routes
+// ✅ Root route to show welcome message
+app.get('/', (req, res) => {
+  res.send('Welcome to API');
+});
+
+// Product routes
 app.get('/api/products', (req, res) => {
   const db = readDatabase();
   res.json(db.products);
@@ -75,6 +77,7 @@ app.post('/api/products', (req, res) => {
   res.status(201).json(product);
 });
 
+// Sales routes
 app.post('/api/sales', (req, res) => {
   try {
     const db = readDatabase();
@@ -136,6 +139,7 @@ app.get('/api/sales', (req, res) => {
   res.json(db.sales);
 });
 
+// Only listen locally
 const PORT = process.env.PORT || 5000;
 if (!process.env.VERCEL) {
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
