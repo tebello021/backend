@@ -5,7 +5,6 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
@@ -15,15 +14,22 @@ app.use(express.static('public'));
 // ID generator
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2);
 
-// Database file
-const dbPath = path.join(__dirname, 'data', 'database.json');
+// Database path
+const isVercel = process.env.VERCEL === '1';
+const dbDir = isVercel ? 'data' : path.join(__dirname, 'data');
+const dbPath = path.join(dbDir, 'database.json');
 
-// Ensure data folder exists
-if (!fs.existsSync(path.dirname(dbPath))) fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+// Ensure folder exists
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
 
 // Initialize database if missing
 if (!fs.existsSync(dbPath)) {
-  fs.writeFileSync(dbPath, JSON.stringify({ products: [], sales: [], customers: [], stockTransactions: [] }, null, 2));
+  fs.writeFileSync(
+    dbPath,
+    JSON.stringify({ products: [], sales: [], customers: [], stockTransactions: [] }, null, 2)
+  );
 }
 
 // Helpers
@@ -69,14 +75,15 @@ app.post('/api/products', (req, res) => {
   res.status(201).json(product);
 });
 
-// Record sale endpoint
 app.post('/api/sales', (req, res) => {
   try {
     const db = readDatabase();
     const { items, customerName, totalAmount, paymentMethod } = req.body;
 
-    if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Items array required' });
-    if (!totalAmount || Number(totalAmount) <= 0) return res.status(400).json({ error: 'Valid totalAmount required' });
+    if (!Array.isArray(items) || items.length === 0)
+      return res.status(400).json({ error: 'Items array required' });
+    if (!totalAmount || Number(totalAmount) <= 0)
+      return res.status(400).json({ error: 'Valid totalAmount required' });
 
     const sale = {
       id: generateId(),
@@ -92,17 +99,17 @@ app.post('/api/sales', (req, res) => {
       date: new Date().toISOString()
     };
 
-    const updatedProducts = [];
-
     for (let item of sale.items) {
       const product = db.products.find(p => p.id === item.productId);
-      if (!product) return res.status(400).json({ error: `Product with ID ${item.productId} not found` });
+      if (!product)
+        return res.status(400).json({ error: `Product with ID ${item.productId} not found` });
       if (product.quantity < item.quantity)
-        return res.status(400).json({ error: `Insufficient stock for ${product.name}. Available: ${product.quantity}, Requested: ${item.quantity}` });
+        return res.status(400).json({
+          error: `Insufficient stock for ${product.name}. Available: ${product.quantity}, Requested: ${item.quantity}`
+        });
 
       product.quantity -= item.quantity;
       product.updatedAt = new Date().toISOString();
-      updatedProducts.push(product);
 
       db.stockTransactions.push({
         id: generateId(),
@@ -124,10 +131,14 @@ app.post('/api/sales', (req, res) => {
   }
 });
 
-// Get sales
 app.get('/api/sales', (req, res) => {
   const db = readDatabase();
   res.json(db.sales);
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const PORT = process.env.PORT || 5000;
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+module.exports = app;
