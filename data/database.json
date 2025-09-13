@@ -1,0 +1,13 @@
+{
+  "products": [
+    { "id": "1", "name": "Coffee", "category": "Drinks", "quantity": 20, "lowStockThreshold": 5, "price": 25 },
+    { "id": "2", "name": "Sandwich", "category": "Food", "quantity": 15, "lowStockThreshold": 3, "price": 45 },
+    { "id": "3", "name": "Cake", "category": "Dessert", "quantity": 8, "lowStockThreshold": 2, "price": 35 },
+    { "id": "4", "name": "Milk", "category": "Dairy", "quantity": 30, "lowStockThreshold": 5, "price": 15 },
+    { "id": "5", "name": "Bread", "category": "Bakery", "quantity": 25, "lowStockThreshold": 5, "price": 12 },
+    { "id": "6", "name": "Spicy Chicken", "category": "Food", "quantity": 10, "lowStockThreshold": 2, "price": 50 },
+    { "id": "7", "name": "Veg and Rice", "category": "Food", "quantity": 18, "lowStockThreshold": 4, "price": 40 },
+    { "id": "8", "name": "Pork Stew", "category": "Food", "quantity": 12, "lowStockThreshold": 3, "price": 55 }
+  ],
+  "sales": []
+}
